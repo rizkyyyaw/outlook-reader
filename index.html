@@ -349,7 +349,7 @@ export default {
         // Format: "username": "password"
         const ALLOWED_USERS = {
             "rizkyzone": "rizky009",
-            "anaz": "anaz123",
+            "admin": "admin123",
             "user2": "pass123"
         };
 
@@ -901,24 +901,26 @@ export default {
                     throw new Error('Refresh token expired or invalid. Please renew credentials.');
                 }
 
-                acc.accessToken = tokenData.access_token;
+                acc.accessToken = tokenData.access_token.trim();
                 if (tokenData.refresh_token) {
                     acc.refreshToken = tokenData.refresh_token;
                 }
 
-                if (typeof acc.accessToken !== 'string' || acc.accessToken.trim().length < 20) {
+                if (typeof acc.accessToken !== 'string' || acc.accessToken.length < 20) {
                     throw new Error('Received malformed access token from Microsoft OAuth server.');
                 }
 
-                let mailEndpoint = `https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
+                let primaryEndpoint = `https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
+                let fallbackEndpoint = `https://outlook.office.com/api/v2.0/me/messages?$top=${topLimit}&$select=Id,Subject,From,ReceivedDateTime,BodyPreview,Body,IsRead`;
 
                 if (apiMethod === 'graph_all') {
-                    mailEndpoint = `https://graph.microsoft.com/v1.0/me/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
+                    primaryEndpoint = `https://graph.microsoft.com/v1.0/me/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
                 } else if (apiMethod === 'outlook_rest') {
-                    mailEndpoint = `https://outlook.office.com/api/v2.0/me/messages?$top=${topLimit}&$select=Id,Subject,From,ReceivedDateTime,BodyPreview,Body,IsRead`;
+                    primaryEndpoint = fallbackEndpoint;
+                    fallbackEndpoint = null;
                 }
 
-                let mailRes = await fetchWithProxy(mailEndpoint, {
+                let mailRes = await fetchWithProxy(primaryEndpoint, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${acc.accessToken}`,
@@ -926,21 +928,37 @@ export default {
                     }
                 });
 
-                if (!mailRes.ok && apiMethod === 'auto') {
-                    mailEndpoint = `https://graph.microsoft.com/v1.0/me/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
-                    mailRes = await fetchWithProxy(mailEndpoint, {
+                let mailData = {};
+                try {
+                    mailData = await mailRes.json();
+                } catch (e) {
+                    mailData = {};
+                }
+
+                // Fallback otomatis ke Outlook REST API jika Graph API menolak token karena Audience mismatch
+                if (!mailRes.ok && fallbackEndpoint && (
+                    mailRes.status === 401 || 
+                    JSON.stringify(mailData).includes("Bearer") || 
+                    JSON.stringify(mailData).includes("could not be read") ||
+                    JSON.stringify(mailData).includes("InvalidAuthenticationToken")
+                )) {
+                    console.warn('[InboxFetch] Graph API rejected token format/audience. Auto falling back to Outlook REST API v2.0...');
+                    mailRes = await fetchWithProxy(fallbackEndpoint, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${acc.accessToken}`,
                             'Content-Type': 'application/json'
                         }
                     });
+                    try {
+                        mailData = await mailRes.json();
+                    } catch (e) {
+                        mailData = {};
+                    }
                 }
 
-                const mailData = await mailRes.json();
-
                 if (!mailRes.ok) {
-                    throw new Error(mailData.error?.message || 'Failed to retrieve inbox messages from API.');
+                    throw new Error(mailData.error?.message || mailData.Error?.Message || 'Failed to retrieve inbox messages from API.');
                 }
 
                 const rawItems = mailData.value || [];
