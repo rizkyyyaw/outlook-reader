@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="https://media.istockphoto.com/id/1324069322/vector/initial-letter-r-logo-r-logo-design-vector.jpg">
+      <link rel="icon" type="image/x-icon" href="/letter-r.png">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -72,7 +72,7 @@
                 </button>
             </form>
             <div class="mt-6 text-center text-[11px] text-slate-500">
-                Protected Area &bull; Private Access Only
+                Protected Area &bull; Multi-User Access
             </div>
         </div>
     </div>
@@ -92,8 +92,8 @@
                 <button onclick="toggleTroubleshootModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-circle-question text-amber-400"></i> CORS & Worker Guide
                 </button>
-                <span class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Mobile & External Ready
+                <span id="currentUserTag" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <i class="fa-solid fa-circle-user mr-1.5"></i> <span id="activeUserName">Guest</span>
                 </span>
                 <button onclick="handleLogout()" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5" title="Keluar">
                     <i class="fa-solid fa-power-off"></i> Logout
@@ -345,16 +345,22 @@ export default {
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2"></div>
 
     <script>
-        // Authentication Configuration
-        const AUTH_USER = "rizkyzone";
-        const AUTH_PASS = "rizky009";
-        const AUTH_USER = "anaz";
-        const AUTH_PASS = "anaz123";
+        // Multi-User Authentication Configuration
+        // Format: "username": "password"
+        const ALLOWED_USERS = {
+            "rizkyzone": "rizky009",
+            "anaz": "anaz123",
+            "user2": "pass123"
+        };
+
         function checkAuthStatus() {
             const isAuth = sessionStorage.getItem('isLoggedIn');
+            const currentUser = sessionStorage.getItem('loggedInUser');
             const overlay = document.getElementById('loginOverlay');
-            if (isAuth === 'true') {
+            
+            if (isAuth === 'true' && currentUser) {
                 overlay.classList.add('hidden');
+                document.getElementById('activeUserName').innerText = currentUser;
             } else {
                 overlay.classList.remove('hidden');
             }
@@ -366,11 +372,15 @@ export default {
             const passIn = document.getElementById('loginPassword').value.trim();
             const errBox = document.getElementById('loginErrorMsg');
 
-            if (userIn === AUTH_USER && passIn === AUTH_PASS) {
+            // Check if username exists and password matches
+            if (ALLOWED_USERS[userIn] && ALLOWED_USERS[userIn] === passIn) {
                 sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('loggedInUser', userIn);
+                
+                document.getElementById('activeUserName').innerText = userIn;
                 document.getElementById('loginOverlay').classList.add('hidden');
                 errBox.classList.add('hidden');
-                showToast('Selamat datang, rizkyzone!', 'success');
+                showToast(`Selamat datang, ${userIn}!`, 'success');
             } else {
                 errBox.classList.remove('hidden');
                 showToast('Username atau password salah!', 'error');
@@ -379,6 +389,7 @@ export default {
 
         function handleLogout() {
             sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('loggedInUser');
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
             document.getElementById('loginOverlay').classList.remove('hidden');
