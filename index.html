@@ -10,65 +10,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Supabase JS Client -->
+    <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
    <link rel="icon" type="image/x-icon" href="/letter-r.png">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1f2937;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col relative">
 
+    <!-- Supabase Config / Auth Modal Overlay -->
     <div id="authOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-slate-800/90 border border-slate-700/80 max-w-md w-full rounded-2xl shadow-2xl p-6 sm:p-8 relative flex flex-col max-h-[90vh] overflow-y-auto">
+        <div class="bg-slate-800/90 border border-slate-700/80 max-w-md w-full rounded-2xl shadow-2xl p-6 sm:p-8 relative flex flex-col">
             
             <div class="flex flex-col items-center text-center mb-6">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-3">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 mb-3">
                     <i class="fa-solid fa-database text-white text-2xl"></i>
                 </div>
-                <h2 class="text-xl font-bold text-white tracking-tight" id="authTitle">Masuk ke System</h2>
-                <p class="text-xs text-slate-400 mt-1" id="authSubTitle">Kelola & Simpan Akun Outlook di Supabase Database</p>
+                <h2 class="text-xl font-bold text-white tracking-tight" id="authTitle">Akses Database Supabase</h2>
+                <p class="text-xs text-slate-400 mt-1" id="authSubtitle">Masuk atau Daftar Akun untuk Mengelola Database Anda</p>
             </div>
 
-            <!-- Supabase Config Status Badge -->
-            <div id="supabaseStatusAlert" class="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5"></i>
-                <div>
-                    <span class="font-semibold block mb-0.5">Konfigurasi Supabase Diperlukan</span>
-                    <p class="text-[11px] text-amber-200/80">Masukkan Project URL & Anon Key Supabase Anda untuk mengaktifkan database.</p>
-                    <button onclick="toggleConfigModal()" class="mt-2 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 px-2 py-1 rounded border border-amber-500/30 font-semibold transition">
-                        <i class="fa-solid fa-gear"></i> Set Supabase Key
+            <!-- Supabase Credentials Collapsible Form -->
+            <div id="supabaseCredentialsContainer" class="mb-4 p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-xs space-y-2">
+                <div class="flex items-center justify-between cursor-pointer" onclick="toggleSupabaseConfigForm()">
+                    <span class="font-semibold text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-plug"></i> Supabase Endpoint Setup
+                    </span>
+                    <i id="supaChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
+                </div>
+                <div id="supaConfigFields" class="hidden space-y-2 pt-2 border-t border-slate-800">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">Project URL</label>
+                        <input type="text" id="supabaseUrlInput" value="https://xhukcseobuwfvlixzcav.supabase.co" placeholder="https://your-project.supabase.co" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-[11px] text-slate-200 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">Anon Public Key</label>
+                        <input type="password" id="supabaseKeyInput" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWtjc2VvYnV3ZnZsaXh6Y2F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDk4MTQsImV4cCI6MjEwODAyNTgxNH0.SrJdMu8zNk8K_2niPa8uiEWDX_ZiPJoMAzUOe7n92Wc" placeholder="eyJhbGciOi..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-[11px] text-slate-200 font-mono">
+                    </div>
+                    <button onclick="reinitSupabaseClient()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] py-1 rounded border border-slate-600 transition">
+                        Update Connection
                     </button>
                 </div>
             </div>
 
-            <!-- Auth Error Banner -->
-            <div id="authErrorMsg" class="hidden mb-4 p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-medium text-center"></div>
+            <!-- Login / Signup Form -->
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="authErrorMsg" class="hidden p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs text-center font-medium"></div>
 
-            <!-- Auth Form -->
-            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Email</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Email Database</label>
                     <div class="relative">
                         <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                        <input type="email" id="authEmail" required placeholder="nama@email.com" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition">
+                        <input type="email" id="authEmail" required placeholder="nama@email.com" class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition">
                     </div>
                 </div>
 
@@ -76,135 +74,79 @@
                     <label class="block text-xs font-medium text-slate-300 mb-1">Password</label>
                     <div class="relative">
                         <i class="fa-solid fa-key absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                        <input type="password" id="authPassword" required minlength="6" placeholder="Minimal 6 karakter" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition">
+                        <input type="password" id="authPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition">
                     </div>
                 </div>
 
-                <button type="submit" id="authSubmitBtn" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-right-to-bracket" id="authBtnIcon"></i> <span id="authBtnText">Masuk Sekarang</span>
+                <button type="submit" id="authSubmitBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-3 px-4 rounded-xl shadow-lg shadow-blue-600/25 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk Ke Sistem
                 </button>
             </form>
 
-            <div class="mt-5 pt-4 border-t border-slate-700/60 text-center">
-                <p class="text-xs text-slate-400">
-                    <span id="authSwitchText">Belum punya akun?</span>
-                    <button type="button" onclick="toggleAuthMode()" id="authSwitchBtn" class="text-emerald-400 font-semibold hover:underline ml-1">
-                        Daftar Baru
-                    </button>
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuration Modal -->
-    <div id="configModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 max-w-lg w-full rounded-2xl shadow-2xl p-6 relative flex flex-col max-h-[90vh]">
-            <button onclick="toggleConfigModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl flex-shrink-0">
-                    <i class="fa-solid fa-sliders"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-white">Pengaturan Supabase</h3>
-                    <p class="text-xs text-slate-400">Masukkan kredensial Supabase Project Anda</p>
-                </div>
-            </div>
-
-            <div class="space-y-4 text-xs text-slate-300 overflow-y-auto pr-1">
-                <div>
-                    <label class="block font-medium text-slate-300 mb-1">Supabase Project URL</label>
-                    <input type="text" id="cfgSupabaseUrl" placeholder="https://xxxx.supabase.co" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none font-mono">
-                </div>
-                <div>
-                    <label class="block font-medium text-slate-300 mb-1">Supabase Anon Key</label>
-                    <input type="password" id="cfgSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none font-mono">
-                </div>
-
-                <div class="p-3 bg-slate-900/90 border border-slate-700/80 rounded-xl space-y-2">
-                    <strong class="text-emerald-400 block font-semibold">Skema Tabel Supabase (SQL Editor)</strong>
-                    <p class="text-[11px] text-slate-400">Jalankan SQL berikut di dashboard Supabase Anda (SQL Editor) untuk membuat tabel penyimpanan akun:</p>
-                    <pre class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono text-[10px] text-emerald-300 overflow-x-auto select-all whitespace-pre">
-create table if not exists outlook_accounts (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  email text not null,
-  password text,
-  refresh_token text not null,
-  client_id text not null,
-  client_secret text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
-alter table outlook_accounts enable row level security;
-
-create policy "Users can manage their own accounts"
-on outlook_accounts for all
-using (auth.uid() = user_id);</pre>
-                </div>
-            </div>
-
-            <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-end gap-2">
-                <button onclick="saveSupabaseConfig()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition">
-                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Konfigurasi
+            <div class="mt-4 pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
+                <span id="authTogglePrompt">Belum punya akun?</span>
+                <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-blue-400 hover:text-blue-300 font-semibold underline">
+                    Daftar Baru
                 </button>
             </div>
         </div>
     </div>
 
-    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-30 px-4 md:px-6 py-3">
+    <!-- Header Navigation Bar -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-30 px-4 md:px-6 py-4">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0">
                     <i class="fa-solid fa-envelope-open-text text-white text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-base sm:text-lg font-bold text-white tracking-tight">Rizone Outlook Inbox Viewer</h1>
-                    <p class="text-[11px] sm:text-xs text-slate-400">Microsoft Graph API Token Manager & Mail Reader</p>
+                    <h1 class="text-base sm:text-lg font-bold text-white tracking-tight">Rizone Outlook Manager</h1>
+                    <p class="text-[11px] sm:text-xs text-slate-400">Supabase DB Sync & Outlook OAuth2 Reader</p>
                 </div>
             </div>
-            
+
+            <!-- Navigation Tabs -->
+            <div class="flex items-center bg-slate-900/80 p-1 rounded-xl border border-slate-700/70 text-xs font-medium">
+                <button onclick="switchTab('inbox')" id="tabBtnInbox" class="px-3 sm:px-4 py-1.5 rounded-lg transition bg-blue-600 text-white shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-inbox"></i>
+                    <span>Inbox Viewer & Queue</span>
+                    <span id="queueBadgeTab" class="bg-blue-800 text-blue-200 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+                </button>
+                <button onclick="switchTab('database')" id="tabBtnDatabase" class="px-3 sm:px-4 py-1.5 rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-indigo-400"></i>
+                    <span>Saved Accounts Database</span>
+                    <span id="dbBadgeTab" class="bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+                </button>
+            </div>
+
             <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
-                <button onclick="toggleConfigModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-database text-emerald-400"></i> Supabase Setup
-                </button>
                 <button onclick="toggleTroubleshootModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-question text-amber-400"></i> CORS Guide
+                    <i class="fa-solid fa-circle-question text-amber-400"></i> SQL & CORS Guide
                 </button>
-                <span id="currentUserTag" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span id="currentUserTag" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <i class="fa-solid fa-circle-user mr-1.5"></i> <span id="activeUserName">Guest</span>
                 </span>
-                <button id="logoutBtn" onclick="handleLogout()" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5" title="Keluar">
+                <button onclick="handleLogout()" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5" title="Keluar">
                     <i class="fa-solid fa-power-off"></i> Logout
                 </button>
             </div>
         </div>
-
-        <!-- Navigation Tabs -->
-        <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-700/40 flex items-center space-x-2">
-            <button id="tabBtnViewer" onclick="switchTab('viewer')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 transition">
-                <i class="fa-solid fa-inbox"></i> Inbox Viewer & Queue
-            </button>
-            <button id="tabBtnDatabase" onclick="switchTab('database')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700/60 transition">
-                <i class="fa-solid fa-server"></i> Saved Accounts Database (<span id="dbAccountBadgeCount">0</span>)
-            </button>
-        </div>
     </header>
 
+    <!-- Main Content Area -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
-        
-        <!-- View 1: Main Inbox Viewer & Account Queue -->
-        <div id="viewInboxViewer" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- TAB 1: INBOX VIEWER & ACTIVE QUEUE -->
+        <div id="viewInboxTab" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             <!-- Left Panel: Input & Queue -->
             <section class="lg:col-span-5 flex flex-col space-y-6">
                 
-                <!-- Bulk Input Card -->
+                <!-- Credentials Input Card -->
                 <div class="bg-slate-800/50 border border-slate-700/70 rounded-2xl p-4 sm:p-5 shadow-xl">
                     <div class="flex items-center justify-between mb-3">
                         <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                            <i class="fa-solid fa-key text-blue-400"></i> OAuth2 Credentials Input
+                            <i class="fa-solid fa-key text-blue-400"></i> Credentials Input
                         </h2>
                         <span class="text-xs text-slate-400">1 entry per line</span>
                     </div>
@@ -214,18 +156,18 @@ using (auth.uid() = user_id);</pre>
                     </p>
 
                     <textarea id="rawInput" rows="4" 
-                        placeholder="user1@outlook.com|MyPass123!|M.R3_BAY...|12345678-xxxx-xxxx-xxxx-123456789abc&#10;user2@outlook.com|Pass456#|M.R3_BAY...|87654321-xxxx-xxxx-xxxx-987654321cba"
+                        placeholder="user1@outlook.com|MyPass123!|M.R3_BAY...|12345678-xxxx-xxxx-xxxx-123456789abc"
                         class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono transition resize-none"></textarea>
 
-                    <!-- Configuration Controls -->
+                    <!-- API Controls -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-400 mb-1">API Method / Endpoint</label>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">API Method</label>
                             <select id="apiMethodSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none">
-                                <option value="auto" selected>Auto Hybrid (Graph API + OAuth2 Fallback)</option>
-                                <option value="graph_inbox">Graph API: Inbox Folder (/me/mailFolders/inbox)</option>
-                                <option value="graph_all">Graph API: All Messages (/me/messages)</option>
-                                <option value="outlook_rest">Legacy OAuth2 Outlook REST API v2.0</option>
+                                <option value="auto" selected>Auto Hybrid (Graph + OAuth2)</option>
+                                <option value="graph_inbox">Graph API: Inbox Folder</option>
+                                <option value="graph_all">Graph API: All Messages</option>
+                                <option value="outlook_rest">Legacy Outlook REST API v2.0</option>
                             </select>
                         </div>
                         <div>
@@ -247,41 +189,40 @@ using (auth.uid() = user_id);</pre>
                         </select>
                     </div>
 
-                    <!-- Network / CORS Proxy Setting -->
+                    <!-- Proxy Settings -->
                     <div class="mt-3 pt-3 border-t border-slate-700/50">
                         <div class="flex items-center justify-between mb-1">
                             <label class="text-[11px] font-semibold text-amber-400 flex items-center gap-1">
-                                <i class="fa-solid fa-shield-halved"></i> Network & CORS Gateway
+                                <i class="fa-solid fa-shield-halved"></i> CORS Gateway
                             </label>
                             <button onclick="testProxyGateway()" class="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-medium">
-                                <i class="fa-solid fa-bolt"></i> Test Connection
+                                <i class="fa-solid fa-bolt"></i> Test Proxy
                             </button>
                         </div>
                         <select id="corsProxyMode" onchange="toggleCustomProxyInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none">
-                            <option value="custom" selected>Custom CORS Proxy / Cloudflare Worker (Recommended)</option>
-                            <option value="auto">Auto Fallback (Direct + Multi Relay)</option>
-                            <option value="direct">Direct Native Request Only</option>
-                            <option value="corsproxy">CorsProxy.io (with API Key)</option>
+                            <option value="custom" selected>Custom Cloudflare Worker</option>
+                            <option value="auto">Auto Fallback (Direct + Relay)</option>
+                            <option value="direct">Direct Native Request</option>
                         </select>
                         <div id="customProxyContainer" class="mt-2">
                             <input type="text" id="customProxyUrl" value="https://young-mud-238f.rizkyfrian03.workers.dev/?url=" placeholder="https://your-worker.workers.dev/?url=" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none font-mono">
                         </div>
-                        <div id="corsProxyKeyContainer" class="mt-2 hidden">
-                            <input type="text" id="corsProxyKey" placeholder="Paste CorsProxy.io API Key (temp_...)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none font-mono">
-                        </div>
                     </div>
 
-                    <div class="flex gap-2 mt-4">
-                        <button id="loadAccountsBtn" onclick="parseAndLoadAccounts()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-blue-600/20 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Load & Save Accounts
+                    <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                        <button id="loadAccountsBtn" onclick="parseAndLoadAccounts(false)" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2.5 px-3 rounded-xl shadow-lg shadow-blue-600/20 transition flex items-center justify-center gap-2" title="Hanya muat ke Queue aktif (TIDAK menyimpan ke database)">
+                            <i class="fa-solid fa-list-check"></i> Load Queue Only
                         </button>
-                        <button onclick="clearAccounts()" title="Clear Queue" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium text-xs py-2.5 px-3 rounded-xl transition">
+                        <button onclick="parseAndLoadAccounts(true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs py-2.5 px-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2" title="Muat ke Queue aktif DAN simpan ke Database Supabase">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Load & Save to DB
+                        </button>
+                        <button onclick="clearQueueOnly()" title="Clear Session Queue" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium text-xs py-2.5 px-3 rounded-xl transition">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Account List Queue Card -->
+                <!-- Active Queue Card -->
                 <div class="bg-slate-800/50 border border-slate-700/70 rounded-2xl p-4 sm:p-5 shadow-xl flex-1 flex flex-col min-h-[280px]">
                     <div class="flex items-center justify-between mb-3">
                         <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
@@ -292,11 +233,10 @@ using (auth.uid() = user_id);</pre>
                         </button>
                     </div>
 
-                    <!-- Account Items Container -->
                     <div id="accountList" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[350px]">
                         <div class="text-center py-10 text-slate-500 text-xs">
                             <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-600 block"></i>
-                            No accounts loaded yet. Paste format above or load from Saved Accounts Database.
+                            No accounts loaded in queue. Load format above or select from Saved Accounts Database.
                         </div>
                     </div>
                 </div>
@@ -307,7 +247,6 @@ using (auth.uid() = user_id);</pre>
                 
                 <div class="bg-slate-800/50 border border-slate-700/70 rounded-2xl p-4 sm:p-5 shadow-xl flex-1 flex flex-col h-[700px]">
                     
-                    <!-- Active Account Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-700/70 pb-4 mb-4 gap-2">
                         <div>
                             <span class="text-[10px] sm:text-xs text-slate-400 block uppercase tracking-wider font-semibold">Active Selection</span>
@@ -316,7 +255,6 @@ using (auth.uid() = user_id);</pre>
                             </h3>
                         </div>
                         <div class="flex items-center gap-2">
-                            <!-- Quick OTP / Keyword Filter Input -->
                             <div class="relative">
                                 <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-slate-400"></i>
                                 <input type="text" id="emailFilterInput" onkeyup="applyEmailFilter()" placeholder="Filter / OTP search..." class="bg-slate-900 border border-slate-700 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 focus:border-blue-500 focus:outline-none w-36 sm:w-44">
@@ -327,10 +265,7 @@ using (auth.uid() = user_id);</pre>
                         </div>
                     </div>
 
-                    <!-- Main Email Area (Messages Split View) -->
                     <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
-                        
-                        <!-- Email List Column -->
                         <div id="emailListCol" class="md:col-span-5 border-r border-slate-700/50 pr-0 md:pr-3 overflow-y-auto space-y-2 max-h-[250px] md:max-h-none">
                             <div class="text-center py-12 text-slate-500 text-xs">
                                 <i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>
@@ -338,60 +273,69 @@ using (auth.uid() = user_id);</pre>
                             </div>
                         </div>
 
-                        <!-- Email Detail Reader Column -->
                         <div id="emailDetailCol" class="md:col-span-7 pl-0 md:pl-2 overflow-y-auto flex flex-col bg-slate-900/50 rounded-xl p-4 border border-slate-700/40 min-h-[250px]">
                             <div class="my-auto text-center py-12 text-slate-500 text-xs">
                                 <i class="fa-solid fa-file-invoice text-3xl mb-2 text-slate-600 block"></i>
                                 Click an email message on the left to read details.
                             </div>
                         </div>
-
                     </div>
 
                 </div>
 
             </section>
+
         </div>
 
-        <!-- View 2: Saved Accounts Database -->
-        <div id="viewDatabase" class="hidden flex-col space-y-6">
+        <!-- TAB 2: SAVED ACCOUNTS DATABASE -->
+        <div id="viewDatabaseTab" class="hidden space-y-6">
             <div class="bg-slate-800/50 border border-slate-700/70 rounded-2xl p-5 shadow-xl">
                 
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-700/70 pb-4 mb-4">
                     <div>
                         <h2 class="text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-server text-emerald-400"></i> Database Storage Akun Supabase
+                            <i class="fa-solid fa-database text-indigo-400"></i> Supabase Database Storage
                         </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Seluruh akun Outlook OAuth2 yang tersimpan aman di database Supabase milik Anda.</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Seluruh akun yang tersimpan permanen di cloud Supabase milik akun Anda.</p>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        <div class="relative flex-1 sm:w-64">
-                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-xs text-slate-500"></i>
-                            <input type="text" id="dbSearchInput" onkeyup="renderDatabaseTable()" placeholder="Cari email / Client ID..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none">
-                        </div>
-                        <button onclick="loadSavedAccountsFromSupabase()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-xl font-medium transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-rotate text-emerald-400"></i> Refresh Data
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="loadSavedAccountsFromSupabase()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-600 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
+                        </button>
+                        <button onclick="promptDeleteAllAccounts()" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash-can"></i> Delete All Accounts
+                        </button>
+                        <button onclick="loadAllDbToQueue()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium transition shadow-lg shadow-indigo-600/20 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-import"></i> Load All to Active Queue
                         </button>
                     </div>
                 </div>
 
-                <!-- Database Accounts Grid / Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="bg-slate-900/80 text-slate-400 border-b border-slate-700/80 font-medium uppercase text-[10px] tracking-wider">
-                                <th class="p-3 rounded-l-xl">Account Email</th>
+                <!-- Filter & Search Bar -->
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <div class="relative flex-1 max-w-md">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="dbSearchInput" onkeyup="renderDbAccountTable()" placeholder="Cari email atau Client ID tersimpan..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <span id="dbRecordCounter" class="text-xs text-slate-400 font-medium">Total: 0 TerSimpan</span>
+                </div>
+
+                <!-- Database Accounts Table -->
+                <div class="overflow-x-auto border border-slate-700/60 rounded-xl">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+                            <tr>
+                                <th class="p-3">Email Outlook</th>
                                 <th class="p-3">Client ID</th>
-                                <th class="p-3">Refresh Token preview</th>
-                                <th class="p-3">Saved Date</th>
-                                <th class="p-3 text-right rounded-r-xl">Aksi</th>
+                                <th class="p-3">Tgl Disimpan</th>
+                                <th class="p-3 text-center">Tindakan</th>
                             </tr>
                         </thead>
-                        <tbody id="dbAccountsTableBody" class="divide-y divide-slate-800 text-slate-300">
+                        <tbody id="dbAccountTableBody" class="divide-y divide-slate-700/40 font-mono">
                             <tr>
-                                <td colspan="5" class="text-center py-12 text-slate-500">
-                                    <i class="fa-solid fa-database text-3xl mb-2 text-slate-600 block"></i>
+                                <td colspan="4" class="text-center py-12 text-slate-500">
+                                    <i class="fa-solid fa-spinner animate-spin text-2xl mb-2 block"></i>
                                     Memuat data dari Supabase...
                                 </td>
                             </tr>
@@ -404,294 +348,482 @@ using (auth.uid() = user_id);</pre>
 
     </main>
 
+    <!-- Custom Delete All Confirmation Modal -->
+    <div id="deleteAllConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 max-w-md w-full rounded-2xl shadow-2xl p-6 relative flex flex-col">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 text-xl flex-shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Konfirmasi Hapus Semua</h3>
+                    <p class="text-xs text-slate-400">Tindakan ini tidak dapat dibatalkan!</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-300 mb-6">
+                Apakah Anda yakin ingin menghapus <strong id="deleteAllCountText" class="text-rose-400">seluruh</strong> akun yang tersimpan di database Supabase Anda? Data akun yang dihapus tidak dapat dipulihkan.
+            </p>
+
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeDeleteAllModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium px-4 py-2 rounded-xl text-xs transition">
+                    Batal
+                </button>
+                <button onclick="confirmDeleteAllAccounts()" class="bg-rose-600 hover:bg-rose-500 text-white font-medium px-4 py-2 rounded-xl text-xs shadow-lg shadow-rose-600/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i> Ya, Hapus Semua
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SQL & Troubleshoot Guide Modal -->
     <div id="troubleshootModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 max-w-xl w-full rounded-2xl shadow-2xl p-6 relative flex flex-col max-h-[90vh]">
+        <div class="bg-slate-800 border border-slate-700 max-w-2xl w-full rounded-2xl shadow-2xl p-6 relative flex flex-col max-h-[90vh]">
             <button onclick="toggleTroubleshootModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="flex items-center space-x-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl flex-shrink-0">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl flex-shrink-0">
+                    <i class="fa-solid fa-database"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-white">Panduan Akses HP / Netlify & Worker Fix</h3>
-                    <p class="text-xs text-slate-400">Solusi CORS & Options Preflight untuk Cloudflare Worker</p>
+                    <h3 class="text-base font-bold text-white">Panduan SQL Editor Supabase & CORS</h3>
+                    <p class="text-xs text-slate-400">Setup Tabel Database & Solusi Request Preflight Cloudflare Worker</p>
                 </div>
             </div>
 
             <div class="space-y-4 text-xs text-slate-300 overflow-y-auto pr-2 flex-1">
                 <div class="p-3 bg-slate-900/80 border border-slate-700 rounded-xl">
-                    <strong class="text-amber-300 block mb-1">Mengapa Muncul "Browser/CORS fetch blocked"?</strong>
-                    Saat dipanggil dari domain terpisah, browser mengirimkan request preflight <code>OPTIONS</code>. Jika Cloudflare Worker belum dibekali handler `OPTIONS`, request akan diblokir.
-                </div>
-
-                <div class="space-y-2 border-t border-slate-700/60 pt-3">
-                    <strong class="text-slate-100 block font-semibold text-xs">Kode Cloudflare Worker Tahan Banting:</strong>
+                    <strong class="text-amber-300 block mb-1">Skrip SQL Pembuatan Tabel Supabase:</strong>
+                    <p class="text-slate-400 mb-2">Buka Dashboard Supabase &rarr; SQL Editor &rarr; New Query, tempelkan skrip SQL ini lalu klik RUN:</p>
                     <pre class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[10px] text-blue-300 overflow-x-auto whitespace-pre">
-export default {
-  async fetch(request) {
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': '*',
-        }
-      });
-    }
+create table if not exists public.outlook_accounts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  email text not null,
+  password text,
+  refresh_token text not null,
+  client_id text not null,
+  client_secret text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  constraint unique_user_email unique (user_id, email)
+);
 
-    const url = new URL(request.url).searchParams.get('url');
-    if (!url) return new Response('Missing url parameter', { status: 400 });
+alter table public.outlook_accounts enable row level security;
 
-    try {
-      const reqHeaders = new Headers(request.headers);
-      reqHeaders.delete('origin');
-      reqHeaders.delete('referer');
+drop policy if exists "Users can manage their own accounts" on public.outlook_accounts;
 
-      const response = await fetch(url, {
-        method: request.method,
-        headers: reqHeaders,
-        body: ['GET', 'HEAD'].includes(request.method) ? null : request.body
-      });
-
-      const newHeaders = new Headers(response.headers);
-      newHeaders.set('Access-Control-Allow-Origin', '*');
-      newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      newHeaders.set('Access-Control-Allow-Headers', '*');
-
-      return new Response(response.body, { status: response.status, headers: newHeaders });
-    } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), {
-        status: 500,
-        headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' }
-      });
-    }
-  }
-};</pre>
+create policy "Users can manage their own accounts"
+on public.outlook_accounts for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);</pre>
                 </div>
             </div>
 
             <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-end">
                 <button onclick="toggleTroubleshootModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition">
-                    Paham, Tutup
+                    Tutup Panduan
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Account Details Modal for Database Tab -->
-    <div id="accountDetailModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 max-w-lg w-full rounded-2xl shadow-2xl p-6 relative flex flex-col">
-            <button onclick="toggleAccountDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl flex-shrink-0">
-                    <i class="fa-solid fa-key"></i>
-                </div>
-                <div>
-                    <h3 id="modalAccEmail" class="text-base font-bold text-white truncate">Detail Kredensial</h3>
-                    <p class="text-xs text-slate-400">Salin detail kredensial OAuth2 yang tersimpan</p>
-                </div>
-            </div>
-
-            <div class="space-y-3 text-xs text-slate-300 font-mono">
-                <div>
-                    <label class="block text-[10px] text-slate-400 font-sans uppercase mb-1">Raw Format Line (Copied format)</label>
-                    <input type="text" id="modalRawFormat" readonly class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-emerald-300 font-mono select-all">
-                </div>
-                <div>
-                    <label class="block text-[10px] text-slate-400 font-sans uppercase mb-1">Refresh Token</label>
-                    <textarea id="modalRefreshToken" readonly rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-300 font-mono resize-none select-all"></textarea>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-slate-400 font-sans uppercase mb-1">Client ID</label>
-                    <input type="text" id="modalClientId" readonly class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-300 font-mono select-all">
-                </div>
-            </div>
-
-            <div class="mt-5 pt-3 border-t border-slate-700/60 flex justify-end gap-2">
-                <button onclick="copyModalFormat()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-copy"></i> Copy Line
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notifications Container -->
+    <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2"></div>
 
     <script>
-        // Supabase Client Initialization
+        // Default Supabase Credentials Pre-configured
+        let SUPABASE_URL = "https://xhukcseobuwfvlixzcav.supabase.co";
+        let SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWtjc2VvYnV3ZnZsaXh6Y2F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDk4MTQsImV4cCI6MjEwODAyNTgxNH0.SrJdMu8zNk8K_2niPa8uiEWDX_ZiPJoMAzUOe7n92Wc";
         let supabaseClient = null;
-        let currentUser = null;
-        let isRegisterMode = false;
-        let savedDbAccounts = []; // Stores database state
 
-        // Default / Stored Credentials
-        const DEFAULT_SUPABASE_URL = "https://xhukcseobuwfvlixzcav.supabase.co";
-        const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWtjc2VvYnV3ZnZsaXh6Y2F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDk4MTQsImV4cCI6MjEwODAyNTgxNH0.SrJdMu8zNk8K_2niPa8uiEWDX_ZiPJoMAzUOe7n92Wc";
+        let isAuthSignUp = false;
+        let currentUserSession = null;
 
-        function getSupabaseConfig() {
-            const url = localStorage.getItem('rizone_sb_url') || DEFAULT_SUPABASE_URL;
-            const key = localStorage.getItem('rizone_sb_key') || DEFAULT_SUPABASE_KEY;
-            return { url, key };
-        }
+        let accounts = []; // Active Queue Accounts
+        let savedDbAccounts = []; // Accounts loaded from Supabase DB
+        let selectedAccountIndex = null;
+        let selectedMessageIndex = null;
 
         function initSupabase() {
-            const cfg = getSupabaseConfig();
-            document.getElementById('cfgSupabaseUrl').value = cfg.url;
-            document.getElementById('cfgSupabaseKey').value = cfg.key;
-
-            if (cfg.url && cfg.key && window.supabase) {
-                try {
-                    supabaseClient = window.supabase.createClient(cfg.url, cfg.key);
-                    document.getElementById('supabaseStatusAlert').classList.add('hidden');
-                    checkSession();
-                } catch (e) {
-                    console.error('Supabase init error:', e);
-                    document.getElementById('supabaseStatusAlert').classList.remove('hidden');
+            try {
+                const u = document.getElementById('supabaseUrlInput')?.value.trim() || SUPABASE_URL;
+                const k = document.getElementById('supabaseKeyInput')?.value.trim() || SUPABASE_KEY;
+                if (u && k && window.supabase) {
+                    supabaseClient = window.supabase.createClient(u, k);
                 }
-            } else {
-                document.getElementById('supabaseStatusAlert').classList.remove('hidden');
+            } catch (e) {
+                console.warn("Supabase init error:", e);
             }
         }
 
-        async function checkSession() {
+        function reinitSupabaseClient() {
+            initSupabase();
+            showToast("Supabase credentials updated!", "success");
+        }
+
+        function toggleSupabaseConfigForm() {
+            const fields = document.getElementById('supaConfigFields');
+            const icon = document.getElementById('supaChevron');
+            fields.classList.toggle('hidden');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        async function checkAuthSession() {
+            initSupabase();
             if (!supabaseClient) return;
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            if (session?.user) {
-                currentUser = session.user;
-                onLoginSuccess();
+
+            const { data } = await supabaseClient.auth.getSession();
+            if (data && data.session) {
+                currentUserSession = data.session;
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.getElementById('activeUserName').innerText = currentUserSession.user.email;
+                document.getElementById('currentUserTag').classList.remove('hidden');
+                loadSavedAccountsFromSupabase();
             } else {
                 document.getElementById('authOverlay').classList.remove('hidden');
             }
         }
 
         function toggleAuthMode() {
-            isRegisterMode = !isRegisterMode;
-            const title = document.getElementById('authTitle');
-            const subtitle = document.getElementById('authSubTitle');
-            const btnText = document.getElementById('authBtnText');
-            const btnIcon = document.getElementById('authBtnIcon');
-            const switchText = document.getElementById('authSwitchText');
-            const switchBtn = document.getElementById('authSwitchBtn');
-            const errBox = document.getElementById('authErrorMsg');
-
-            errBox.classList.add('hidden');
-
-            if (isRegisterMode) {
-                title.innerText = "Daftar Akun Baru";
-                subtitle.innerText = "Buat akun untuk menyimpan database kredensial Outlook";
-                btnText.innerText = "Daftar Akun";
-                btnIcon.className = "fa-solid fa-user-plus";
-                switchText.innerText = "Sudah punya akun?";
-                switchBtn.innerText = "Masuk Sekarang";
-            } else {
-                title.innerText = "Masuk ke System";
-                subtitle.innerText = "Kelola & Simpan Akun Outlook di Supabase Database";
-                btnText.innerText = "Masuk Sekarang";
-                btnIcon.className = "fa-solid fa-right-to-bracket";
-                switchText.innerText = "Belum punya akun?";
-                switchBtn.innerText = "Daftar Baru";
-            }
+            isAuthSignUp = !isAuthSignUp;
+            document.getElementById('authTitle').innerText = isAuthSignUp ? "Daftar Akun Baru" : "Akses Database Supabase";
+            document.getElementById('authSubtitle').innerText = isAuthSignUp ? "Buat akun baru untuk mengelola database pribadi Anda" : "Masuk dengan akun yang telah terdaftar";
+            document.getElementById('authSubmitBtn').innerHTML = isAuthSignUp ? `<i class="fa-solid fa-user-plus"></i> Daftar Baru` : `<i class="fa-solid fa-right-to-bracket"></i> Masuk Ke Sistem`;
+            document.getElementById('authTogglePrompt').innerText = isAuthSignUp ? "Sudah punya akun?" : "Belum punya akun?";
+            document.getElementById('authToggleBtn').innerText = isAuthSignUp ? "Masuk" : "Daftar Baru";
+            document.getElementById('authErrorMsg').classList.add('hidden');
         }
 
         async function handleAuthSubmit(e) {
             e.preventDefault();
+            if (!supabaseClient) initSupabase();
+
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value.trim();
             const errBox = document.getElementById('authErrorMsg');
+
             errBox.classList.add('hidden');
 
-            if (!supabaseClient) {
-                errBox.innerText = "Silakan atur Supabase Project URL & Anon Key terlebih dahulu!";
-                errBox.classList.remove('hidden');
-                toggleConfigModal();
-                return;
-            }
-
             try {
-                if (isRegisterMode) {
+                if (isAuthSignUp) {
                     const { data, error } = await supabaseClient.auth.signUp({ email, password });
                     if (error) throw error;
-                    if (data.user && !data.session) {
-                        showToast("Pendaftaran berhasil! Periksa email untuk konfirmasi atau langsung masuk.", "success");
-                        toggleAuthMode();
-                        return;
-                    }
-                    currentUser = data.user;
+                    showToast("Pendaftaran berhasil! Silakan login.", "success");
+                    toggleAuthMode();
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    currentUser = data.user;
+                    currentUserSession = data.session;
+                    document.getElementById('authOverlay').classList.add('hidden');
+                    document.getElementById('activeUserName').innerText = currentUserSession.user.email;
+                    document.getElementById('currentUserTag').classList.remove('hidden');
+                    showToast(`Selamat datang kembali, ${currentUserSession.user.email}!`, "success");
+                    loadSavedAccountsFromSupabase();
                 }
-
-                showToast(`Selamat datang, ${currentUser.email}!`, 'success');
-                onLoginSuccess();
             } catch (err) {
-                errBox.innerText = err.message || "Gagal memproses otentikasi.";
+                errBox.innerText = err.message || "Gagal melakukan verifikasi otentikasi.";
                 errBox.classList.remove('hidden');
             }
-        }
-
-        async function onLoginSuccess() {
-            document.getElementById('authOverlay').classList.add('hidden');
-            document.getElementById('activeUserName').innerText = currentUser.email.split('@')[0];
-            await loadSavedAccountsFromSupabase();
         }
 
         async function handleLogout() {
             if (supabaseClient) {
                 await supabaseClient.auth.signOut();
             }
-            currentUser = null;
+            currentUserSession = null;
             accounts = [];
             savedDbAccounts = [];
             selectedAccountIndex = null;
             selectedMessageIndex = null;
-            renderAccountList();
-            renderDatabaseTable();
-            resetMailViewer();
             document.getElementById('authOverlay').classList.remove('hidden');
-            showToast('Berhasil keluar dari akun.', 'info');
+            renderAccountList();
+            renderDbAccountTable();
+            resetMailViewer();
+            showToast("Berhasil keluar dari sistem.", "info");
         }
 
-        function toggleConfigModal() {
-            document.getElementById('configModal').classList.toggle('hidden');
+        // --- SUPABASE DATABASE OPS ---
+        async function loadSavedAccountsFromSupabase() {
+            if (!supabaseClient || !currentUserSession) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('outlook_accounts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    if (error.code === '42P01') {
+                        showToast("Tabel 'outlook_accounts' belum dibuat di Supabase! Buka Panduan SQL.", "warning");
+                    } else {
+                        showToast(`Database Error: ${error.message}`, "error");
+                    }
+                    return;
+                }
+
+                savedDbAccounts = data || [];
+                document.getElementById('dbBadgeTab').innerText = savedDbAccounts.length;
+                document.getElementById('dbRecordCounter').innerText = `Total: ${savedDbAccounts.length} TerSimpan`;
+                renderDbAccountTable();
+
+            } catch (err) {
+                console.error("Supabase fetch error:", err);
+            }
         }
 
-        function saveSupabaseConfig() {
-            const url = document.getElementById('cfgSupabaseUrl').value.trim();
-            const key = document.getElementById('cfgSupabaseKey').value.trim();
+        async function saveAccountToSupabase(acc) {
+            if (!supabaseClient || !currentUserSession) {
+                showToast("Sesi login Supabase tidak ditemukan. Silakan login terlebih dahulu.", "error");
+                return null;
+            }
 
-            if (!url || !key) {
-                showToast('Mohon isi Supabase URL & Anon Key.', 'warning');
+            try {
+                const payload = {
+                    user_id: currentUserSession.user.id,
+                    email: acc.email,
+                    password: acc.password || '',
+                    refresh_token: acc.refreshToken,
+                    client_id: acc.clientId,
+                    client_secret: acc.clientSecret || ''
+                };
+
+                // Primary attempt: Upsert with unique user_id, email constraint
+                let { data, error } = await supabaseClient
+                    .from('outlook_accounts')
+                    .upsert(payload, { onConflict: 'user_id,email' })
+                    .select();
+
+                // Secondary attempt: If onConflict constraint fails, check for existing entry manually
+                if (error) {
+                    console.warn("Supabase upsert with constraint failed, trying fallback strategy...", error.message);
+                    
+                    const { data: existingRows } = await supabaseClient
+                        .from('outlook_accounts')
+                        .select('id')
+                        .eq('user_id', currentUserSession.user.id)
+                        .eq('email', acc.email);
+
+                    if (existingRows && existingRows.length > 0) {
+                        const targetId = existingRows[0].id;
+                        const updateRes = await supabaseClient
+                            .from('outlook_accounts')
+                            .update(payload)
+                            .eq('id', targetId)
+                            .select();
+                        data = updateRes.data;
+                        error = updateRes.error;
+                    } else {
+                        const insertRes = await supabaseClient
+                            .from('outlook_accounts')
+                            .insert([payload])
+                            .select();
+                        data = insertRes.data;
+                        error = insertRes.error;
+                    }
+                }
+
+                if (error) {
+                    console.error("Save to Supabase error:", error);
+                    showToast(`Gagal menyimpan ${acc.email}: ${error.message}`, "error");
+                    return null;
+                }
+
+                if (data && data.length > 0) {
+                    acc.dbId = data[0].id;
+                }
+
+                loadSavedAccountsFromSupabase();
+                return data;
+            } catch (err) {
+                console.error("Save to Supabase exception:", err);
+                showToast(`Gagal menyimpan ${acc.email}: ${err.message}`, "error");
+                return null;
+            }
+        }
+
+        async function deleteAccountFromSupabase(dbId, email) {
+            if (!supabaseClient || !currentUserSession) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('outlook_accounts')
+                    .delete()
+                    .eq('id', dbId);
+
+                if (error) throw error;
+                showToast(`Akun ${email} berhasil dihapus dari database!`, "success");
+                loadSavedAccountsFromSupabase();
+            } catch (err) {
+                showToast(`Gagal menghapus: ${err.message}`, "error");
+            }
+        }
+
+        function promptDeleteAllAccounts() {
+            if (savedDbAccounts.length === 0) {
+                showToast("Tidak ada akun di database untuk dihapus.", "warning");
+                return;
+            }
+            document.getElementById('deleteAllCountText').innerText = `${savedDbAccounts.length} akun`;
+            document.getElementById('deleteAllConfirmModal').classList.remove('hidden');
+        }
+
+        function closeDeleteAllModal() {
+            document.getElementById('deleteAllConfirmModal').classList.add('hidden');
+        }
+
+        async function confirmDeleteAllAccounts() {
+            closeDeleteAllModal();
+            if (!supabaseClient || !currentUserSession) return;
+
+            try {
+                showToast("Menghapus seluruh akun dari database...", "info");
+                const { error } = await supabaseClient
+                    .from('outlook_accounts')
+                    .delete()
+                    .eq('user_id', currentUserSession.user.id);
+
+                if (error) throw error;
+                showToast("Seluruh akun di database telah berhasil dihapus!", "success");
+                loadSavedAccountsFromSupabase();
+            } catch (err) {
+                showToast(`Gagal menghapus semua akun: ${err.message}`, "error");
+            }
+        }
+
+        function renderDbAccountTable() {
+            const tbody = document.getElementById('dbAccountTableBody');
+            const search = document.getElementById('dbSearchInput')?.value.toLowerCase().trim() || '';
+
+            let filtered = savedDbAccounts;
+            if (search) {
+                filtered = filtered.filter(a => a.email.toLowerCase().includes(search) || a.client_id.toLowerCase().includes(search));
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-8 text-slate-500">
+                            ${search ? 'Tidak ada akun tersimpan yang cocok dengan pencarian.' : 'Belum ada akun tersimpan di database Supabase Anda.'}
+                        </td>
+                    </tr>`;
                 return;
             }
 
-            localStorage.setItem('rizone_sb_url', url);
-            localStorage.setItem('rizone_sb_key', key);
-
-            showToast('Konfigurasi Supabase disimpan.', 'success');
-            toggleConfigModal();
-            initSupabase();
+            let html = '';
+            filtered.forEach(acc => {
+                const dateStr = new Date(acc.created_at).toLocaleDateString();
+                html += `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="p-3 font-semibold text-white">${escapeHtml(acc.email)}</td>
+                        <td class="p-3 text-slate-400">${escapeHtml(acc.client_id.substring(0, 12))}...</td>
+                        <td class="p-3 text-slate-400">${dateStr}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center space-x-2">
+                                <button onclick="loadSingleDbAccountToQueue('${acc.id}')" title="Muat ke Inbox Viewer" class="p-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg transition">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                </button>
+                                <button onclick="deleteAccountFromSupabase('${acc.id}', '${escapeHtml(acc.email)}')" title="Hapus Permanen dari Database" class="p-1.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 rounded-lg transition">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            tbody.innerHTML = html;
         }
 
-        // Account & Mail Viewer State
-        let accounts = [];
-        let selectedAccountIndex = null;
-        let selectedMessageIndex = null;
+        function loadSingleDbAccountToQueue(dbId) {
+            const found = savedDbAccounts.find(a => a.id === dbId);
+            if (!found) return;
 
+            const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === found.email.toLowerCase());
+            const accObj = {
+                dbId: found.id,
+                email: found.email,
+                password: found.password || '',
+                refreshToken: found.refresh_token,
+                clientId: found.client_id,
+                clientSecret: found.client_secret || '',
+                status: 'idle',
+                errorMsg: '',
+                messages: [],
+                accessToken: null
+            };
+
+            if (existingIdx >= 0) {
+                accounts[existingIdx] = accObj;
+            } else {
+                accounts.push(accObj);
+            }
+
+            showToast(`Akun ${found.email} dimasukkan ke Queue!`, "success");
+            switchTab('inbox');
+            renderAccountList();
+            selectAccount(existingIdx >= 0 ? existingIdx : accounts.length - 1);
+        }
+
+        function loadAllDbToQueue() {
+            if (savedDbAccounts.length === 0) {
+                showToast("Tidak ada data akun di database untuk dimuat.", "warning");
+                return;
+            }
+
+            let loadedCount = 0;
+            savedDbAccounts.forEach(found => {
+                const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === found.email.toLowerCase());
+                const accObj = {
+                    dbId: found.id,
+                    email: found.email,
+                    password: found.password || '',
+                    refreshToken: found.refresh_token,
+                    clientId: found.client_id,
+                    clientSecret: found.client_secret || '',
+                    status: 'idle',
+                    errorMsg: '',
+                    messages: [],
+                    accessToken: null
+                };
+
+                if (existingIdx >= 0) {
+                    accounts[existingIdx] = accObj;
+                } else {
+                    accounts.push(accObj);
+                }
+                loadedCount++;
+            });
+
+            showToast(`Memuat ${loadedCount} akun tersimpan ke Active Queue!`, "success");
+            switchTab('inbox');
+            renderAccountList();
+            if (accounts.length > 0) selectAccount(0);
+        }
+
+        // --- TAB NAVIGATION ---
+        function switchTab(tab) {
+            const viewInbox = document.getElementById('viewInboxTab');
+            const viewDatabase = document.getElementById('viewDatabaseTab');
+            const btnInbox = document.getElementById('tabBtnInbox');
+            const btnDatabase = document.getElementById('tabBtnDatabase');
+
+            if (tab === 'inbox') {
+                viewInbox.classList.remove('hidden');
+                viewDatabase.classList.add('hidden');
+                btnInbox.className = "px-3 sm:px-4 py-1.5 rounded-lg transition bg-blue-600 text-white shadow-sm flex items-center gap-2";
+                btnDatabase.className = "px-3 sm:px-4 py-1.5 rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center gap-2";
+            } else {
+                viewInbox.classList.add('hidden');
+                viewDatabase.classList.remove('hidden');
+                btnDatabase.className = "px-3 sm:px-4 py-1.5 rounded-lg transition bg-blue-600 text-white shadow-sm flex items-center gap-2";
+                btnInbox.className = "px-3 sm:px-4 py-1.5 rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center gap-2";
+            }
+        }
+
+        // --- OUTLOOK MAIL READER LOGIC ---
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
         function showToast(message, type = 'info') {
@@ -705,256 +837,30 @@ export default {
                 warning: 'bg-amber-600 border-amber-500 text-white',
                 info: 'bg-blue-600 border-blue-500 text-white'
             };
-
-            const icons = {
-                success: 'fa-circle-check',
-                error: 'fa-circle-xmark',
-                warning: 'fa-triangle-exclamation',
-                info: 'fa-circle-info'
-            };
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
 
             toast.className = `p-3 rounded-xl border shadow-xl flex items-center space-x-2 text-xs font-medium transition-all transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.info}`;
             toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${escapeHtml(message)}</span>`;
 
             container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
 
-        function switchTab(tab) {
-            const btnViewer = document.getElementById('tabBtnViewer');
-            const btnDatabase = document.getElementById('tabBtnDatabase');
-            const viewViewer = document.getElementById('viewInboxViewer');
-            const viewDatabase = document.getElementById('viewDatabase');
-
-            if (tab === 'viewer') {
-                btnViewer.className = "px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 transition";
-                btnDatabase.className = "px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700/60 transition";
-                viewViewer.className = "grid grid-cols-1 lg:grid-cols-12 gap-6";
-                viewDatabase.className = "hidden";
-            } else {
-                btnDatabase.className = "px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 transition";
-                btnViewer.className = "px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700/60 transition";
-                viewViewer.className = "hidden";
-                viewDatabase.className = "flex flex-col space-y-6";
-                renderDatabaseTable();
-            }
-        }
-
         function toggleCustomProxyInput() {
             const mode = document.getElementById('corsProxyMode').value;
             const customContainer = document.getElementById('customProxyContainer');
-            const keyContainer = document.getElementById('corsProxyKeyContainer');
-            
-            if (mode === 'custom') {
-                customContainer.classList.remove('hidden');
-                keyContainer.classList.add('hidden');
-            } else if (mode === 'corsproxy') {
-                customContainer.classList.add('hidden');
-                keyContainer.classList.remove('hidden');
-            } else {
-                customContainer.classList.add('hidden');
-                keyContainer.classList.add('hidden');
-            }
+            if (mode === 'custom') customContainer.classList.remove('hidden');
+            else customContainer.classList.add('hidden');
         }
 
         function toggleTroubleshootModal() {
             document.getElementById('troubleshootModal').classList.toggle('hidden');
         }
 
-        async function loadSavedAccountsFromSupabase() {
-            if (!supabaseClient || !currentUser) return;
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('outlook_accounts')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: true });
-
-                if (error) throw error;
-
-                if (data) {
-                    savedDbAccounts = data;
-                    document.getElementById('dbAccountBadgeCount').innerText = data.length;
-
-                    // Keep active queue empty at fresh login/load unless user specifically adds accounts
-                    renderAccountList();
-                    renderDatabaseTable();
-
-                    showToast(`Dimuat ${data.length} akun tersimpan dari database Supabase.`, 'success');
-                }
-            } catch (err) {
-                console.error('Error fetching accounts from Supabase:', err);
-                showToast('Gagal memuat daftar akun dari database Supabase.', 'warning');
-            }
-        }
-
-        async function saveAccountToSupabase(acc) {
-            if (!supabaseClient || !currentUser) return;
-
-            try {
-                const payload = {
-                    user_id: currentUser.id,
-                    email: acc.email,
-                    password: acc.password,
-                    refresh_token: acc.refreshToken,
-                    client_id: acc.clientId,
-                    client_secret: acc.clientSecret
-                };
-
-                if (acc.dbId) {
-                    await supabaseClient
-                        .from('outlook_accounts')
-                        .update(payload)
-                        .eq('id', acc.dbId);
-                } else {
-                    const { data, error } = await supabaseClient
-                        .from('outlook_accounts')
-                        .insert([payload])
-                        .select();
-
-                    if (!error && data && data.length > 0) {
-                        acc.dbId = data[0].id;
-                    }
-                }
-                
-                await loadSavedAccountsFromSupabase();
-            } catch (err) {
-                console.error('Failed to sync account to Supabase:', err);
-            }
-        }
-
-        async function deleteAccountFromSupabase(dbId) {
-            if (!supabaseClient || !dbId) return;
-            try {
-                await supabaseClient.from('outlook_accounts').delete().eq('id', dbId);
-                await loadSavedAccountsFromSupabase();
-            } catch (err) {
-                console.error('Failed to delete account from Supabase:', err);
-            }
-        }
-
-        function renderDatabaseTable() {
-            const tbody = document.getElementById('dbAccountsTableBody');
-            const searchVal = document.getElementById('dbSearchInput')?.value.toLowerCase().trim() || '';
-
-            let filtered = savedDbAccounts || [];
-            if (searchVal) {
-                filtered = filtered.filter(a => 
-                    a.email.toLowerCase().includes(searchVal) || 
-                    (a.client_id && a.client_id.toLowerCase().includes(searchVal))
-                );
-            }
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center py-10 text-slate-500">
-                            <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-600 block"></i>
-                            ${searchVal ? 'Tidak ada akun yang sesuai dengan kata kunci pencarian.' : 'Belum ada akun tersimpan di database.'}
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            let html = '';
-            filtered.forEach((acc) => {
-                const createdDate = acc.created_at ? new Date(acc.created_at).toLocaleDateString() : '-';
-                const formatLine = `${acc.email}|${acc.password || ''}|${acc.refresh_token}|${acc.client_id}${acc.client_secret ? '|' + acc.client_secret : ''}`;
-
-                html += `
-                    <tr class="hover:bg-slate-800/60 transition">
-                        <td class="p-3 font-semibold text-white">
-                            <i class="fa-solid fa-envelope text-blue-400 mr-2"></i> ${escapeHtml(acc.email)}
-                        </td>
-                        <td class="p-3 font-mono text-[11px] text-slate-400">
-                            ${escapeHtml(acc.client_id ? acc.client_id.substring(0, 10) + '...' : '-')}
-                        </td>
-                        <td class="p-3 font-mono text-[11px] text-slate-400">
-                            ${escapeHtml(acc.refresh_token ? acc.refresh_token.substring(0, 15) + '...' : '-')}
-                        </td>
-                        <td class="p-3 text-slate-400">${escapeHtml(createdDate)}</td>
-                        <td class="p-3 text-right space-x-1">
-                            <button onclick="viewAccDetailsFromDb('${acc.id}')" title="Detail Kredensial" class="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                            <button onclick="loadSingleDbAccountToQueue('${acc.id}')" title="Muat ke Inbox Viewer" class="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition">
-                                <i class="fa-solid fa-play"></i>
-                            </button>
-                            <button onclick="deleteAccountFromSupabase('${acc.id}')" title="Hapus dari Database" class="p-1.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 rounded-lg transition">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            tbody.innerHTML = html;
-        }
-
-        function viewAccDetailsFromDb(dbId) {
-            const acc = savedDbAccounts.find(a => a.id === dbId);
-            if (!acc) return;
-
-            document.getElementById('modalAccEmail').innerText = acc.email;
-            document.getElementById('modalRefreshToken').value = acc.refresh_token;
-            document.getElementById('modalClientId').value = acc.client_id;
-            
-            const rawLine = `${acc.email}|${acc.password || ''}|${acc.refresh_token}|${acc.client_id}${acc.client_secret ? '|' + acc.client_secret : ''}`;
-            document.getElementById('modalRawFormat').value = rawLine;
-
-            toggleAccountDetailModal();
-        }
-
-        function toggleAccountDetailModal() {
-            document.getElementById('accountDetailModal').classList.toggle('hidden');
-        }
-
-        function copyModalFormat() {
-            const input = document.getElementById('modalRawFormat');
-            input.select();
-            document.execCommand('copy');
-            showToast('Format kredensial berhasil disalin ke clipboard!', 'success');
-        }
-
-        function loadSingleDbAccountToQueue(dbId) {
-            const acc = savedDbAccounts.find(a => a.id === dbId);
-            if (!acc) return;
-
-            const idx = accounts.findIndex(a => a.email.toLowerCase() === acc.email.toLowerCase());
-            switchTab('viewer');
-
-            if (idx >= 0) {
-                selectAccount(idx);
-            } else {
-                accounts.push({
-                    dbId: acc.id,
-                    email: acc.email,
-                    password: acc.password || '',
-                    refreshToken: acc.refresh_token,
-                    clientId: acc.client_id,
-                    clientSecret: acc.client_secret || '',
-                    status: 'idle',
-                    errorMsg: '',
-                    messages: [],
-                    accessToken: null
-                });
-                renderAccountList();
-                selectAccount(accounts.length - 1);
-            }
-            showToast(`Akun ${acc.email} dimuat ke aktif queue.`, 'info');
-        }
-
-        // Fetch Helper with Proxy
         async function fetchWithProxy(targetUrl, fetchOptions = {}) {
             const proxyMode = document.getElementById('corsProxyMode').value;
             const customProxy = document.getElementById('customProxyUrl')?.value.trim();
@@ -971,7 +877,7 @@ export default {
                     const res = await fetch(proxyUrl, fetchOptions);
                     if (res.ok || res.status < 500) return res;
                 } catch (e) {
-                    console.warn('[FetchProxy] Custom worker failed, trying direct/relay...', e);
+                    console.warn('[FetchProxy] Custom worker failed, falling back to direct...', e);
                 }
             }
 
@@ -979,24 +885,10 @@ export default {
                 const directRes = await fetch(targetUrl, fetchOptions);
                 if (directRes.ok || directRes.status < 500) return directRes;
             } catch (e) {
-                console.warn('[FetchProxy] Direct fetch failed, trying public relays...', e);
+                console.warn('[FetchProxy] Direct fetch failed:', e);
             }
 
-            const backupRelays = [
-                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
-            ];
-
-            for (const relay of backupRelays) {
-                try {
-                    const rRes = await fetch(relay, fetchOptions);
-                    if (rRes.ok || rRes.status < 500) return rRes;
-                } catch (e) {
-                    console.warn(`[FetchProxy] Relay ${relay} failed:`, e);
-                }
-            }
-
-            throw new Error('Network request failed across Worker, Direct, and Relays.');
+            throw new Error('Network request failed across Proxy and Direct.');
         }
 
         async function testProxyGateway() {
@@ -1010,20 +902,16 @@ export default {
                     showToast('Gateway Connected Successfully!', 'success');
                     return;
                 }
-            } catch (e) {
-                console.warn('Gateway test ping:', e);
-            }
-            showToast('Gateway test complete. System ready.', 'info');
+            } catch (e) {}
+            showToast('Gateway test complete.', 'info');
         }
 
         async function executeTokenExchange(acc, tenant, bodyParams) {
             const proxyMode = document.getElementById('corsProxyMode').value;
             const customProxy = document.getElementById('customProxyUrl')?.value.trim();
-            const corsKey = document.getElementById('corsProxyKey')?.value.trim();
             const tokenBody = new URLSearchParams(bodyParams);
 
             const isConsumer = acc.email && /@(outlook|hotmail|live|msn)\./i.test(acc.email);
-
             const baseEndpoints = [];
             if (isConsumer) {
                 baseEndpoints.push(`https://login.live.com/oauth20_token.srf`);
@@ -1032,7 +920,6 @@ export default {
             baseEndpoints.push(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`);
 
             const targets = [];
-
             baseEndpoints.forEach(ep => {
                 if (customProxy && (proxyMode === 'custom' || proxyMode === 'auto')) {
                     let pUrl = customProxy;
@@ -1040,21 +927,12 @@ export default {
                     const fullUrl = pUrl.includes('url=') ? `${pUrl}${encodeURIComponent(ep)}` : `${pUrl}${ep}`;
                     targets.push({ name: 'Custom Cloudflare Proxy', url: fullUrl });
                 }
-
                 if (proxyMode === 'auto' || proxyMode === 'direct') {
                     targets.push({ name: `Direct (${new URL(ep).hostname})`, url: ep });
-                }
-
-                if (proxyMode === 'corsproxy' || (proxyMode === 'auto' && corsKey)) {
-                    const corsUrl = corsKey 
-                        ? `https://corsproxy.io/?key=${encodeURIComponent(corsKey)}&url=${encodeURIComponent(ep)}`
-                        : `https://corsproxy.io/?${encodeURIComponent(ep)}`;
-                    targets.push({ name: 'CorsProxy Relay', url: corsUrl });
                 }
             });
 
             let lastError = null;
-
             for (const target of targets) {
                 try {
                     const res = await fetch(target.url, {
@@ -1063,15 +941,9 @@ export default {
                         body: tokenBody
                     });
 
-                    if (!res.ok && res.status >= 500) continue;
-
                     const text = await res.text();
                     let data = {};
-                    try {
-                        data = JSON.parse(text);
-                    } catch (e) {
-                        continue;
-                    }
+                    try { data = JSON.parse(text); } catch (e) { continue; }
 
                     if (data && (data.access_token || data.error || data.error_description)) {
                         return data;
@@ -1080,19 +952,19 @@ export default {
                     lastError = err;
                 }
             }
-
             throw lastError || new Error('Network request failed across all gateway endpoints.');
         }
 
-        async function parseAndLoadAccounts() {
+        async function parseAndLoadAccounts(saveToDb = false) {
             const raw = document.getElementById('rawInput').value;
             if (!raw || !raw.trim()) {
-                showToast('Masukkan kredensial ke dalam kotak teks.', 'warning');
+                showToast('Please enter credentials into the text box.', 'warning');
                 return;
             }
 
             const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             let addedCount = 0;
+            let savedDbCount = 0;
 
             for (const line of lines) {
                 const parts = line.split('|').map(p => p.trim());
@@ -1104,11 +976,8 @@ export default {
                 if (parts.length === 3) {
                     [email, refreshToken, clientId] = parts;
                 } else if (parts.length === 4) {
-                    if (isGuid(parts[2])) {
-                        [email, refreshToken, clientId, clientSecret] = parts;
-                    } else {
-                        [email, password, refreshToken, clientId] = parts;
-                    }
+                    if (isGuid(parts[2])) [email, refreshToken, clientId, clientSecret] = parts;
+                    else [email, password, refreshToken, clientId] = parts;
                 } else if (parts.length >= 5) {
                     [email, password, refreshToken, clientId, clientSecret] = parts;
                 }
@@ -1117,83 +986,58 @@ export default {
                     const cleanSecret = (clientSecret || '').trim();
                     const validSecret = (cleanSecret && !['null', 'none', 'undefined', 'false'].includes(cleanSecret.toLowerCase())) ? cleanSecret : '';
 
-                    const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email.toLowerCase());
                     const accObj = {
-                        dbId: existingIdx >= 0 ? accounts[existingIdx].dbId : null,
-                        email,
-                        password,
-                        refreshToken,
-                        clientId,
-                        clientSecret: validSecret,
-                        status: 'idle',
-                        errorMsg: '',
-                        messages: [],
-                        accessToken: null
+                        email, password, refreshToken, clientId,
+                        clientSecret: validSecret, status: 'idle',
+                        errorMsg: '', messages: [], accessToken: null
                     };
 
-                    if (existingIdx >= 0) {
-                        accounts[existingIdx] = accObj;
-                    } else {
-                        accounts.push(accObj);
-                    }
+                    const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email.toLowerCase());
+                    if (existingIdx >= 0) accounts[existingIdx] = accObj;
+                    else accounts.push(accObj);
 
-                    // Save account directly into Supabase database
-                    await saveAccountToSupabase(accObj);
+                    if (saveToDb) {
+                        const dbRes = await saveAccountToSupabase(accObj);
+                        if (dbRes) savedDbCount++;
+                    }
                     addedCount++;
                 }
             }
 
             if (addedCount > 0) {
-                showToast(`${addedCount} akun berhasil dimasukkan & disimpan di database!`, 'success');
-                document.getElementById('rawInput').value = '';
+                showToast(`Loaded ${addedCount} account(s) into queue. ${saveToDb ? `Saved ${savedDbCount} to DB!` : ''}`, 'success');
                 renderAccountList();
-                if (selectedAccountIndex === null && accounts.length > 0) {
-                    selectAccount(0);
-                }
+                if (accounts.length > 0) selectAccount(0);
             } else {
-                showToast('Tidak ada format kredensial yang valid.', 'error');
+                showToast('No valid account entries found. Check line format.', 'error');
             }
         }
 
-        async function clearAccounts() {
-            if (accounts.length === 0) return;
+        function clearQueueOnly() {
             accounts = [];
             selectedAccountIndex = null;
             selectedMessageIndex = null;
             renderAccountList();
             resetMailViewer();
-            showToast('Semua akun dibersihkan dari tampilan queue.', 'info');
+            showToast('Active Queue cleared.', 'info');
         }
 
-        function deleteAccount(index) {
+        function deleteAccountFromQueue(index) {
             accounts.splice(index, 1);
-
             if (selectedAccountIndex === index) {
                 selectedAccountIndex = accounts.length > 0 ? 0 : null;
-                if (selectedAccountIndex !== null) {
-                    selectAccount(selectedAccountIndex);
-                } else {
-                    resetMailViewer();
-                }
+                if (selectedAccountIndex !== null) selectAccount(selectedAccountIndex);
+                else resetMailViewer();
             } else if (selectedAccountIndex > index) {
                 selectedAccountIndex--;
             }
             renderAccountList();
-            showToast('Akun dihapus dari tampilan queue.', 'info');
         }
 
         function resetMailViewer() {
             document.getElementById('currentEmailDisplay').innerHTML = `Select an account from the queue`;
-            document.getElementById('emailListCol').innerHTML = `
-                <div class="text-center py-12 text-slate-500 text-xs">
-                    <i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>
-                    Select or fetch an account to load inbox messages.
-                </div>`;
-            document.getElementById('emailDetailCol').innerHTML = `
-                <div class="my-auto text-center py-12 text-slate-500 text-xs">
-                    <i class="fa-solid fa-file-invoice text-3xl mb-2 text-slate-600 block"></i>
-                    Click an email message on the left to read details.
-                </div>`;
+            document.getElementById('emailListCol').innerHTML = `<div class="text-center py-12 text-slate-500 text-xs"><i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>Select or fetch an account to load inbox messages.</div>`;
+            document.getElementById('emailDetailCol').innerHTML = `<div class="my-auto text-center py-12 text-slate-500 text-xs"><i class="fa-solid fa-file-invoice text-3xl mb-2 text-slate-600 block"></i>Click an email message on the left to read details.</div>`;
             document.getElementById('mailCountBadge').classList.add('hidden');
         }
 
@@ -1203,25 +1047,14 @@ export default {
             selectedMessageIndex = null;
             const acc = accounts[index];
             
-            document.getElementById('currentEmailDisplay').innerHTML = `
-                <i class="fa-solid fa-user-circle text-indigo-400"></i> ${escapeHtml(acc.email)}
-            `;
-
+            document.getElementById('currentEmailDisplay').innerHTML = `<i class="fa-solid fa-user-circle text-indigo-400"></i> ${escapeHtml(acc.email)}`;
             renderAccountList();
 
             if (acc.messages && acc.messages.length > 0) {
                 renderEmailList(acc.messages);
             } else {
-                document.getElementById('emailListCol').innerHTML = `
-                    <div class="text-center py-12 text-slate-500 text-xs">
-                        <i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>
-                        ${acc.status === 'error' ? 'Failed to load inbox. Click refresh button to retry.' : 'Click "Fetch" to load inbox messages.'}
-                    </div>`;
-                document.getElementById('emailDetailCol').innerHTML = `
-                    <div class="my-auto text-center py-12 text-slate-500 text-xs">
-                        <i class="fa-solid fa-file-invoice text-3xl mb-2 text-slate-600 block"></i>
-                        Select or fetch messages to view details.
-                    </div>`;
+                document.getElementById('emailListCol').innerHTML = `<div class="text-center py-12 text-slate-500 text-xs"><i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>${acc.status === 'error' ? 'Failed to load inbox.' : 'Click "Fetch" to load inbox messages.'}</div>`;
+                document.getElementById('emailDetailCol').innerHTML = `<div class="my-auto text-center py-12 text-slate-500 text-xs"><i class="fa-solid fa-file-invoice text-3xl mb-2 text-slate-600 block"></i>Select or fetch messages to view details.</div>`;
                 document.getElementById('mailCountBadge').classList.add('hidden');
             }
         }
@@ -1232,59 +1065,38 @@ export default {
             const fetchAllBtn = document.getElementById('fetchAllBtn');
 
             countBadge.innerText = accounts.length;
+            document.getElementById('queueBadgeTab').innerText = accounts.length;
             fetchAllBtn.disabled = accounts.length === 0;
 
             if (accounts.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-10 text-slate-500 text-xs">
-                        <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-600 block"></i>
-                        No accounts loaded yet. Paste format above or load from Saved Accounts Database.
-                    </div>`;
+                listContainer.innerHTML = `<div class="text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-inbox text-3xl mb-2 text-slate-600 block"></i>No accounts loaded in queue.</div>`;
                 return;
             }
 
             let html = '';
             accounts.forEach((acc, idx) => {
                 const isSelected = selectedAccountIndex === idx;
-                let statusBadge = '';
-                if (acc.status === 'idle') {
-                    statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-slate-700 text-slate-300">Ready</span>`;
-                } else if (acc.status === 'loading') {
-                    statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i class="fa-solid fa-spinner animate-spin"></i> Fetching...</span>`;
-                } else if (acc.status === 'success') {
-                    statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${acc.messages.length} Mails</span>`;
-                } else if (acc.status === 'error') {
-                    statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30">Failed</span>`;
-                }
+                let statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-slate-700 text-slate-300">Ready</span>`;
+                if (acc.status === 'loading') statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i class="fa-solid fa-spinner animate-spin"></i> Fetching...</span>`;
+                else if (acc.status === 'success') statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${acc.messages.length} Mails</span>`;
+                else if (acc.status === 'error') statusBadge = `<span class="px-2 py-0.5 text-[10px] rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30">Failed</span>`;
 
                 html += `
-                    <div onclick="selectAccount(${idx})" class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${
-                        isSelected 
-                        ? 'bg-indigo-600/20 border-indigo-500/70 shadow-lg' 
-                        : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/80'
-                    }">
+                    <div onclick="selectAccount(${idx})" class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${isSelected ? 'bg-indigo-600/20 border-indigo-500/70 shadow-lg' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/80'}">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-semibold text-white truncate">${escapeHtml(acc.email)}</span>
                                 ${statusBadge}
                             </div>
-                            <div class="text-[10px] text-slate-400 truncate font-mono">
-                                Client ID: ${escapeHtml(acc.clientId ? acc.clientId.substring(0, 8) : '')}...
-                            </div>
+                            <div class="text-[10px] text-slate-400 truncate font-mono">Client ID: ${escapeHtml(acc.clientId.substring(0, 8))}...</div>
                             ${acc.errorMsg ? `<div class="text-[10px] text-rose-400 truncate mt-1">${escapeHtml(acc.errorMsg)}</div>` : ''}
                         </div>
                         <div class="flex items-center space-x-1" onclick="event.stopPropagation()">
-                            <button onclick="fetchInboxForAccount(${idx})" title="Fetch Inbox" class="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-700/60 rounded-lg transition">
-                                <i class="fa-solid fa-rotate text-xs"></i>
-                            </button>
-                            <button onclick="deleteAccount(${idx})" title="Remove Account" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-lg transition">
-                                <i class="fa-solid fa-xmark text-xs"></i>
-                            </button>
+                            <button onclick="fetchInboxForAccount(${idx})" title="Fetch Inbox" class="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-700/60 rounded-lg transition"><i class="fa-solid fa-rotate text-xs"></i></button>
+                            <button onclick="deleteAccountFromQueue(${idx})" title="Remove from Queue" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-lg transition"><i class="fa-solid fa-xmark text-xs"></i></button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-
             listContainer.innerHTML = html;
         }
 
@@ -1314,9 +1126,7 @@ export default {
 
             try {
                 let targetScope = 'https://graph.microsoft.com/Mail.Read offline_access';
-                if (apiMethod === 'outlook_rest') {
-                    targetScope = 'https://outlook.office.com/Mail.Read offline_access';
-                }
+                if (apiMethod === 'outlook_rest') targetScope = 'https://outlook.office.com/Mail.Read offline_access';
 
                 const payloadParams = {
                     client_id: acc.clientId,
@@ -1334,7 +1144,20 @@ export default {
                 try {
                     tokenData = await executeTokenExchange(acc, tenant, payloadParams);
                 } catch (firstErr) {
-                    delete payloadParams.client_secret;
+                    if (payloadParams.client_secret) {
+                        delete payloadParams.client_secret;
+                        acc.clientSecret = '';
+                        tokenData = await executeTokenExchange(acc, tenant, payloadParams);
+                    } else if (payloadParams.scope) {
+                        delete payloadParams.scope;
+                        tokenData = await executeTokenExchange(acc, tenant, payloadParams);
+                    } else {
+                        throw firstErr;
+                    }
+                }
+
+                if (tokenData && (tokenData.error || tokenData.error_description) && payloadParams.scope) {
+                    delete payloadParams.scope;
                     tokenData = await executeTokenExchange(acc, tenant, payloadParams);
                 }
 
@@ -1343,58 +1166,42 @@ export default {
                 }
 
                 if (!tokenData || !tokenData.access_token) {
-                    throw new Error('Refresh token expired or invalid. Please renew credentials.');
+                    throw new Error('Refresh token expired or invalid.');
                 }
 
                 acc.accessToken = tokenData.access_token.trim();
                 if (tokenData.refresh_token) {
                     acc.refreshToken = tokenData.refresh_token;
-                    // Update fresh token in database
-                    await saveAccountToSupabase(acc);
+                    // Hanya perbarui ke Supabase jika akun ini memang sudah tersimpan di database (memiliki dbId)
+                    if (acc.dbId) {
+                        await saveAccountToSupabase(acc);
+                    }
                 }
 
                 let primaryEndpoint = `https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
                 let fallbackEndpoint = `https://outlook.office.com/api/v2.0/me/messages?$top=${topLimit}&$select=Id,Subject,From,ReceivedDateTime,BodyPreview,Body,IsRead`;
 
-                if (apiMethod === 'graph_all') {
-                    primaryEndpoint = `https://graph.microsoft.com/v1.0/me/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
-                } else if (apiMethod === 'outlook_rest') {
-                    primaryEndpoint = fallbackEndpoint;
-                    fallbackEndpoint = null;
-                }
+                if (apiMethod === 'graph_all') primaryEndpoint = `https://graph.microsoft.com/v1.0/me/messages?$top=${topLimit}&$select=id,subject,from,receivedDateTime,bodyPreview,body,isRead,importance,hasAttachments&$orderby=receivedDateTime desc`;
+                else if (apiMethod === 'outlook_rest') { primaryEndpoint = fallbackEndpoint; fallbackEndpoint = null; }
 
                 let mailRes = await fetchWithProxy(primaryEndpoint, {
                     method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${acc.accessToken}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Authorization': `Bearer ${acc.accessToken}`, 'Content-Type': 'application/json' }
                 });
 
                 let mailData = {};
-                try {
-                    mailData = await mailRes.json();
-                } catch (e) {
-                    mailData = {};
-                }
+                try { mailData = await mailRes.json(); } catch (e) {}
 
                 if (!mailRes.ok && fallbackEndpoint) {
                     mailRes = await fetchWithProxy(fallbackEndpoint, {
                         method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${acc.accessToken}`,
-                            'Content-Type': 'application/json'
-                        }
+                        headers: { 'Authorization': `Bearer ${acc.accessToken}`, 'Content-Type': 'application/json' }
                     });
-                    try {
-                        mailData = await mailRes.json();
-                    } catch (e) {
-                        mailData = {};
-                    }
+                    try { mailData = await mailRes.json(); } catch (e) {}
                 }
 
                 if (!mailRes.ok) {
-                    throw new Error(mailData.error?.message || mailData.Error?.Message || 'Failed to retrieve inbox messages from API.');
+                    throw new Error(mailData.error?.message || mailData.Error?.Message || 'Failed to retrieve inbox messages.');
                 }
 
                 const rawItems = mailData.value || [];
@@ -1403,16 +1210,13 @@ export default {
                 showToast(`Fetched ${acc.messages.length} emails for ${acc.email}`, 'success');
 
             } catch (err) {
-                console.error(`OAuth2 API error for ${acc.email}:`, err);
                 acc.status = 'error';
                 acc.errorMsg = err.message || 'Error fetching inbox.';
                 showToast(`Error (${acc.email}): ${acc.errorMsg.substring(0, 50)}...`, 'error');
             }
 
             renderAccountList();
-            if (selectedAccountIndex === index) {
-                selectAccount(index);
-            }
+            if (selectedAccountIndex === index) selectAccount(index);
         }
 
         async function fetchAllAccounts() {
@@ -1449,11 +1253,7 @@ export default {
             badge.classList.remove('hidden');
 
             if (!filtered || filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12 text-slate-500 text-xs">
-                        <i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>
-                        ${filterTerm ? 'No messages match search keyword.' : 'No messages found in inbox.'}
-                    </div>`;
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs"><i class="fa-regular fa-envelope text-3xl mb-2 text-slate-600 block"></i>${filterTerm ? 'No messages match search keyword.' : 'No messages found in inbox.'}</div>`;
                 return;
             }
 
@@ -1467,21 +1267,15 @@ export default {
                 const isRead = msg.isRead;
 
                 html += `
-                    <div onclick="viewEmailDetail(${originalIdx})" class="p-3 rounded-xl border transition cursor-pointer text-xs ${
-                        isSelected 
-                        ? 'bg-blue-600/20 border-blue-500/70 shadow-lg' 
-                        : isRead ? 'bg-slate-900/40 border-slate-700/40 hover:bg-slate-800/60' : 'bg-slate-800/80 border-slate-600/60 font-semibold hover:bg-slate-800'
-                    }">
+                    <div onclick="viewEmailDetail(${originalIdx})" class="p-3 rounded-xl border transition cursor-pointer text-xs ${isSelected ? 'bg-blue-600/20 border-blue-500/70 shadow-lg' : isRead ? 'bg-slate-900/40 border-slate-700/40 hover:bg-slate-800/60' : 'bg-slate-800/80 border-slate-600/60 font-semibold hover:bg-slate-800'}">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-slate-200 truncate ${!isRead ? 'text-white font-bold' : ''}">${escapeHtml(senderName)}</span>
                             <span class="text-[10px] text-slate-400 flex-shrink-0 ml-1">${escapeHtml(dateStr)}</span>
                         </div>
                         <div class="text-slate-300 font-medium truncate mb-1">${escapeHtml(subject)}</div>
                         <div class="text-[11px] text-slate-400 line-clamp-2 font-normal">${escapeHtml(msg.bodyPreview || '')}</div>
-                    </div>
-                `;
+                    </div>`;
             });
-
             container.innerHTML = html;
         }
 
@@ -1524,21 +1318,17 @@ export default {
                     <div class="flex-1 overflow-y-auto">
                         ${bodyContent}
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        // Initialize App on DOM Load
-        document.addEventListener('DOMContentLoaded', initSupabase);
-
-        window.toggleAuthMode = toggleAuthMode;
+        // Global Exports
         window.handleAuthSubmit = handleAuthSubmit;
         window.handleLogout = handleLogout;
-        window.toggleConfigModal = toggleConfigModal;
-        window.saveSupabaseConfig = saveSupabaseConfig;
+        window.toggleAuthMode = toggleAuthMode;
+        window.switchTab = switchTab;
         window.parseAndLoadAccounts = parseAndLoadAccounts;
-        window.clearAccounts = clearAccounts;
-        window.deleteAccount = deleteAccount;
+        window.clearQueueOnly = clearQueueOnly;
+        window.deleteAccountFromQueue = deleteAccountFromQueue;
         window.selectAccount = selectAccount;
         window.fetchInboxForAccount = fetchInboxForAccount;
         window.fetchAllAccounts = fetchAllAccounts;
@@ -1547,14 +1337,18 @@ export default {
         window.toggleTroubleshootModal = toggleTroubleshootModal;
         window.testProxyGateway = testProxyGateway;
         window.applyEmailFilter = applyEmailFilter;
-        window.switchTab = switchTab;
         window.loadSavedAccountsFromSupabase = loadSavedAccountsFromSupabase;
         window.deleteAccountFromSupabase = deleteAccountFromSupabase;
-        window.renderDatabaseTable = renderDatabaseTable;
-        window.viewAccDetailsFromDb = viewAccDetailsFromDb;
-        window.toggleAccountDetailModal = toggleAccountDetailModal;
-        window.copyModalFormat = copyModalFormat;
+        window.promptDeleteAllAccounts = promptDeleteAllAccounts;
+        window.closeDeleteAllModal = closeDeleteAllModal;
+        window.confirmDeleteAllAccounts = confirmDeleteAllAccounts;
+        window.renderDbAccountTable = renderDbAccountTable;
         window.loadSingleDbAccountToQueue = loadSingleDbAccountToQueue;
+        window.loadAllDbToQueue = loadAllDbToQueue;
+        window.reinitSupabaseClient = reinitSupabaseClient;
+        window.toggleSupabaseConfigForm = toggleSupabaseConfigForm;
+
+        document.addEventListener('DOMContentLoaded', checkAuthSession);
     </script>
 </body>
 </html>
