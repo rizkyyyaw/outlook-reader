@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-   <link rel="icon" type="image/x-icon" href="/letter-r.png">
+    <link rel="icon" type="image/x-icon" href="/letter-r.png">
     <style>
         body { font-family: 'Inter', sans-serif; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -23,7 +23,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col relative">
 
-    <!-- Supabase Config / Auth Modal Overlay -->
+    <!-- Supabase Config / Auth Modal Overlay (Cleaned - Endpoint Setup Removed) -->
     <div id="authOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-slate-800/90 border border-slate-700/80 max-w-md w-full rounded-2xl shadow-2xl p-6 sm:p-8 relative flex flex-col">
             
@@ -31,31 +31,8 @@
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 mb-3">
                     <i class="fa-solid fa-database text-white text-2xl"></i>
                 </div>
-                <h2 class="text-xl font-bold text-white tracking-tight" id="authTitle">Akses Database Supabase</h2>
+                <h2 class="text-xl font-bold text-white tracking-tight" id="authTitle">Akses Rizone Mail Reader</h2>
                 <p class="text-xs text-slate-400 mt-1" id="authSubtitle">Masuk atau Daftar Akun untuk Mengelola Database Anda</p>
-            </div>
-
-            <!-- Supabase Credentials Collapsible Form -->
-            <div id="supabaseCredentialsContainer" class="mb-4 p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-xs space-y-2">
-                <div class="flex items-center justify-between cursor-pointer" onclick="toggleSupabaseConfigForm()">
-                    <span class="font-semibold text-amber-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-plug"></i> Supabase Endpoint Setup
-                    </span>
-                    <i id="supaChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
-                </div>
-                <div id="supaConfigFields" class="hidden space-y-2 pt-2 border-t border-slate-800">
-                    <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">Project URL</label>
-                        <input type="text" id="supabaseUrlInput" value="https://xhukcseobuwfvlixzcav.supabase.co" placeholder="https://your-project.supabase.co" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-[11px] text-slate-200 font-mono">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">Anon Public Key</label>
-                        <input type="password" id="supabaseKeyInput" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWtjc2VvYnV3ZnZsaXh6Y2F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDk4MTQsImV4cCI6MjEwODAyNTgxNH0.SrJdMu8zNk8K_2niPa8uiEWDX_ZiPJoMAzUOe7n92Wc" placeholder="eyJhbGciOi..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-[11px] text-slate-200 font-mono">
-                    </div>
-                    <button onclick="reinitSupabaseClient()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] py-1 rounded border border-slate-600 transition">
-                        Update Connection
-                    </button>
-                </div>
             </div>
 
             <!-- Login / Signup Form -->
@@ -433,8 +410,8 @@ with check (auth.uid() = user_id);</pre>
 
     <script>
         // Default Supabase Credentials Pre-configured
-        let SUPABASE_URL = "https://xhukcseobuwfvlixzcav.supabase.co";
-        let SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWtjc2VvYnV3ZnZsaXh6Y2F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDk4MTQsImV4cCI6MjEwODAyNTgxNH0.SrJdMu8zNk8K_2niPa8uiEWDX_ZiPJoMAzUOe7n92Wc";
+        const SUPABASE_URL = "https://xhukcseobuwfvlixzcav.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWtjc2VvYnV3ZnZsaXh6Y2F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDk4MTQsImV4cCI6MjEwODAyNTgxNH0.SrJdMu8zNk8K_2niPa8uiEWDX_ZiPJoMAzUOe7n92Wc";
         let supabaseClient = null;
 
         let isAuthSignUp = false;
@@ -447,27 +424,12 @@ with check (auth.uid() = user_id);</pre>
 
         function initSupabase() {
             try {
-                const u = document.getElementById('supabaseUrlInput')?.value.trim() || SUPABASE_URL;
-                const k = document.getElementById('supabaseKeyInput')?.value.trim() || SUPABASE_KEY;
-                if (u && k && window.supabase) {
-                    supabaseClient = window.supabase.createClient(u, k);
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
             } catch (e) {
                 console.warn("Supabase init error:", e);
             }
-        }
-
-        function reinitSupabaseClient() {
-            initSupabase();
-            showToast("Supabase credentials updated!", "success");
-        }
-
-        function toggleSupabaseConfigForm() {
-            const fields = document.getElementById('supaConfigFields');
-            const icon = document.getElementById('supaChevron');
-            fields.classList.toggle('hidden');
-            icon.classList.toggle('fa-chevron-down');
-            icon.classList.toggle('fa-chevron-up');
         }
 
         async function checkAuthSession() {
@@ -1345,8 +1307,6 @@ with check (auth.uid() = user_id);</pre>
         window.renderDbAccountTable = renderDbAccountTable;
         window.loadSingleDbAccountToQueue = loadSingleDbAccountToQueue;
         window.loadAllDbToQueue = loadAllDbToQueue;
-        window.reinitSupabaseClient = reinitSupabaseClient;
-        window.toggleSupabaseConfigForm = toggleSupabaseConfigForm;
 
         document.addEventListener('DOMContentLoaded', checkAuthSession);
     </script>
